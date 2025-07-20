@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"payment-service/config"
 	"payment-service/db"
-	"payment-service/internal/middlewares/auth"
-	"payment-service/internal/middlewares/logger"
+	"payment-service/internal/middleware/auth"
+	"payment-service/internal/middleware/logger"
 	"payment-service/internal/router"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	database := db.Connect(cfg.DBPATH)
+	database := db.Connect(cfg.DBURL)
 
 	logger.Init(cfg.APP_ENV)
 
@@ -45,6 +45,11 @@ func main() {
 		router.AccountRouter(accountGroup, database)
 	}
 
+	transferGroup := r.Group("/transfer")
+	{
+		transferGroup.Use(auth.Middleware(cfg.JWTSecret))
+		router.TransferRouter(transferGroup, database)
+	}
 
 	log.Fatal(r.Run(":" + cfg.PORT))
 }
