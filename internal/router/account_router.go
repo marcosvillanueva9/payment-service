@@ -1,25 +1,24 @@
 package router
 
 import (
-	"database/sql"
 	"net/http"
-	"payment-service/internal/middlewares/logger"
+	"payment-service/internal/middleware/logger"
+	"payment-service/internal/model"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
-func AccountRouter(r *gin.RouterGroup, db *sqlx.DB) {
+func AccountRouter(r *gin.RouterGroup, db *gorm.DB) {
 	r.GET("/:id/balance", func(c *gin.Context) {
 		log := logger.From(c)
 
+		var account model.Account
 		id := c.Param("id")
 		log.Infow("Fetching account balance", "account_id", id)
 
-		var balance float64
-		err := db.Get(&balance, "SELECT balance FROM accounts WHERE id = $1", id)
-		if err != nil {
-			if err == sql.ErrNoRows {
+		if err := db.First(&account, "id = ?", id).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
 				log.Warnw("Account not found", "account_id", id)
 				c.JSON(http.StatusNotFound, gin.H{"message": "Account not found"})
 				return
@@ -33,11 +32,11 @@ func AccountRouter(r *gin.RouterGroup, db *sqlx.DB) {
 			return
 		}
 
-		log.Infow("Account balance retrieved successfully", 
-			"account_id", id, 
-			"balance", balance,
+		log.Infow("Account balance retrieved successfully",
+			"account_id", id,
+			"balance", account.Balance,
 		)
 
-		c.JSON(http.StatusOK, gin.H{"id": id, "balance": balance})
+		c.JSON(http.StatusOK, gin.H{"id": id, "balance": account.Balance})
 	})
 }
