@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+    "github.com/zsais/go-gin-prometheus"
 )
 
 func main() {
@@ -26,6 +27,11 @@ func main() {
 	logger.Init(cfg.APP_ENV)
 
 	r := gin.Default()
+
+	//TODO personalizar metricas
+	p := ginprometheus.NewPrometheus("payment_service")
+	p.Use(r)
+
 	r.Use(logger.Middleware())
 
 	// SOLO PARA PRUEBA
