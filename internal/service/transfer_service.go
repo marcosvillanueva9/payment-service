@@ -1,10 +1,12 @@
 package service
 
 import (
+	"log"
 	"net/http"
 	"payment-service/internal/constant"
 	"payment-service/internal/middleware/logger"
 	"payment-service/internal/model"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -14,6 +16,7 @@ import (
 type TransferService interface {
 	CreateTransfer(req *model.TransferRequest, ctx *gin.Context) (model.Transfer, *ServiceError)
 	UpdateTransferStatus(transferID string, status string, ctx *gin.Context) (*model.Transfer, *ServiceError)
+	CronExpireTransfers() (*ServiceError)
 }
 
 type transferService struct {
@@ -102,6 +105,24 @@ func (s *transferService) UpdateTransferStatus(transferID string, status string,
 	logger.Infow("Transfer status updated successfully", "transfer_id", transfer.ID, "status", transfer.Status)
 
 	return s.completeTransfer(&transfer, ctx)
+}
+
+func (s *transferService) CronExpireTransfers() (*ServiceError) {
+
+	timeLimit := time.Now().Add(-5 * time.Minute)
+	result := s.db.Model(&model.Transfer{}).
+		Where("status = ? AND updated_at < ?", constant.TransferStatusPending, timeLimit).
+		Update("status", constant.TransferStatusFailed)
+	
+	if result.Error != nil {
+		return &ServiceError{Message: "Failed to expire transfers", Code: http.StatusInternalServerError, Error: result.Error}
+	}
+
+	if result.RowsAffected > 0 {
+		log.Println("[Cron] Expired transfers", "count", result.RowsAffected)
+	}
+
+	return nil
 }
 
 func (s *transferService) completeTransfer(transfer *model.Transfer, ctx *gin.Context) (*model.Transfer, *ServiceError) {
