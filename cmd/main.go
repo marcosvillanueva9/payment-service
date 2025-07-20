@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"payment-service/config"
 	"payment-service/db"
-	"payment-service/internal/auth"
+	"payment-service/internal/middlewares/auth"
+	"payment-service/internal/middlewares/logger"
 	"payment-service/internal/router"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,10 @@ func main() {
 
 	database := db.Connect(cfg.DBPATH)
 
+	logger.Init(cfg.APP_ENV)
+
 	r := gin.Default()
+	r.Use(logger.Middleware())
 
 	// SOLO PARA PRUEBA
 	r.POST("/token/:id", func(c *gin.Context) {

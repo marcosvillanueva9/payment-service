@@ -10,6 +10,7 @@ type Config struct {
 	DBPATH   string
 	JWTSecret string
 	PORT     string
+	APP_ENV string
 }
 
 func Load() (*Config, error) {
@@ -20,5 +21,6 @@ func Load() (*Config, error) {
 		DBPATH:   os.Getenv("DB_PATH"),
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		PORT:     os.Getenv("PORT"),
+		APP_ENV:  os.Getenv("APP_ENV"),
 	}, nil
 }
