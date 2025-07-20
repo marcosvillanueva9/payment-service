@@ -32,3 +32,6 @@ go.work.sum
 # .vscode/
 
 payment-db/
+
+# Go sum
+go.sum
