@@ -31,10 +31,10 @@ func (ctrl *accountController) GetAccountBalance(c *gin.Context) {
 		return
 	}
 
-	balance, err := ctrl.service.GetAccountBalance(accountID)
+	balance, err := ctrl.service.GetAccountBalance(accountID, c)
 	if err != nil {
 		c.JSON(err.Code, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"result":balance})
+	c.JSON(http.StatusOK, gin.H{"result": balance})
 }
