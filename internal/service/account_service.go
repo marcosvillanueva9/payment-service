@@ -7,8 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
+import (
+	"github.com/gin-gonic/gin"
+)
+
 type AccountService interface {
-	GetAccountBalance(accountID string) (model.AccountBalanceResponse, *ServiceError)
+	GetAccountBalance(accountID string, ctx *gin.Context) (model.AccountBalanceResponse, *ServiceError)
 }
 
 type accountService struct {
@@ -18,7 +22,7 @@ func NewAccountService(db *gorm.DB) AccountService {
 	return &accountService{db: db}
 }
 
-func (s *accountService) GetAccountBalance(accountID string) (model.AccountBalanceResponse, *ServiceError) {
+func (s *accountService) GetAccountBalance(accountID string, ctx *gin.Context) (model.AccountBalanceResponse, *ServiceError) {
 	var account model.Account
 	if err := s.db.First(&account, "id = ?", accountID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
