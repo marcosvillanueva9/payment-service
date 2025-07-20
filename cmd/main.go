@@ -8,6 +8,8 @@ import (
 	"payment-service/internal/middleware/auth"
 	"payment-service/internal/middleware/logger"
 	"payment-service/internal/router"
+	"payment-service/internal/scheduler"
+	"payment-service/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -50,6 +52,10 @@ func main() {
 		transferGroup.Use(auth.Middleware(cfg.JWTSecret))
 		router.TransferRouter(transferGroup, database)
 	}
+
+	transferScheduler := scheduler.NewTransferScheduler(service.NewTransferService(database))
+	transferScheduler.Start()
+	defer transferScheduler.Stop()
 
 	log.Fatal(r.Run(":" + cfg.PORT))
 }
